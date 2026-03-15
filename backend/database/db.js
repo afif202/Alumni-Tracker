@@ -1,7 +1,11 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.resolve(__dirname, 'alumni.db');
+// Vercel Serverless Functions have a read-only filesystem except for /tmp
+const isVercel = process.env.VERCEL || process.env.NODE_ENV === 'production';
+const dbPath = isVercel
+    ? path.join('/tmp', 'alumni.db')
+    : path.resolve(__dirname, 'alumni.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error connecting to database:', err.message);
