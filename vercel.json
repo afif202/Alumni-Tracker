@@ -10,14 +10,23 @@
       "use": "@vercel/static"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/backend/server.js"
+      "source": "/api/(.*)",
+      "destination": "/backend/server.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/frontend/$1"
+      "source": "/login",
+      "destination": "/frontend/login.html"
+    },
+    {
+      "source": "/",
+      "destination": "/frontend/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/$1"
     }
-  ]
+  ],
+  "cleanUrls": true
 }
