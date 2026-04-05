@@ -58,7 +58,6 @@ alumni-tracker/
    npm start
    ```
 4. Access dashboard at `http://localhost:3000`
-5. Default login: `admin` / `admin332211`
 
 ## 📊 Key Features
 
