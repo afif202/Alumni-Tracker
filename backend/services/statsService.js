@@ -1,44 +1,67 @@
-// Statistics & analytics service
-const db = require('../database/db');
+// Statistics & analytics service — Supabase version
+const supabase = require('../config/supabaseClient');
 
 class StatsService {
-  
-  // Get dashboard statistics
+
   static async getDashboardStats() {
-    const [total, identified, verification, notFound, untracked] = await Promise.all([
-      db.getAsync('SELECT COUNT(*) as count FROM alumni'),
-      db.getAsync("SELECT COUNT(*) as count FROM alumni WHERE status = 'Teridentifikasi'"),
-      db.getAsync("SELECT COUNT(*) as count FROM alumni WHERE status = 'Perlu Verifikasi Manual'"),
-      db.getAsync("SELECT COUNT(*) as count FROM alumni WHERE status = 'Belum Ditemukan'"),
-      db.getAsync("SELECT COUNT(*) as count FROM alumni WHERE status = 'Belum Dilacak'")
+    const [
+      { count: total },
+      { count: identified },
+      { count: verification },
+      { count: notFound },
+      { count: untracked }
+    ] = await Promise.all([
+      supabase.from('alumni').select('*', { count: 'exact', head: true }),
+      supabase.from('alumni').select('*', { count: 'exact', head: true }).eq('status', 'Teridentifikasi'),
+      supabase.from('alumni').select('*', { count: 'exact', head: true }).eq('status', 'Perlu Verifikasi Manual'),
+      supabase.from('alumni').select('*', { count: 'exact', head: true }).eq('status', 'Belum Ditemukan'),
+      supabase.from('alumni').select('*', { count: 'exact', head: true }).eq('status', 'Belum Dilacak')
     ]);
-    
-    const byKategori = await db.allAsync(
-      'SELECT kategori_pekerjaan, COUNT(*) as count FROM alumni GROUP BY kategori_pekerjaan'
-    );
-    const byProdi = await db.allAsync(
-      'SELECT prodi, COUNT(*) as count FROM alumni GROUP BY prodi ORDER BY count DESC LIMIT 15'
-    );
-    const byYear = await db.allAsync(
-      'SELECT tahun_lulus, COUNT(*) as count FROM alumni WHERE tahun_lulus IS NOT NULL GROUP BY tahun_lulus ORDER BY tahun_lulus'
-    );
-    
+
+    // Group by kategori_pekerjaan
+    const { data: rawKategori } = await supabase
+      .from('alumni')
+      .select('kategori_pekerjaan');
+
+    // Group by prodi
+    const { data: rawProdi } = await supabase
+      .from('alumni')
+      .select('prodi');
+
+    // Group by tahun_lulus
+    const { data: rawYear } = await supabase
+      .from('alumni')
+      .select('tahun_lulus')
+      .not('tahun_lulus', 'is', null);
+
+    const aggregateCount = (arr, field) => {
+      const map = {};
+      for (const item of arr || []) {
+        const val = item[field] || 'N/A';
+        map[val] = (map[val] || 0) + 1;
+      }
+      return Object.entries(map).map(([key, count]) => ({ [field]: key, count }));
+    };
+
+    const byKategori = aggregateCount(rawKategori, 'kategori_pekerjaan');
+    const byProdiRaw = aggregateCount(rawProdi, 'prodi').sort((a, b) => b.count - a.count).slice(0, 15);
+    const byYearRaw = aggregateCount(rawYear, 'tahun_lulus').sort((a, b) => Number(a.tahun_lulus) - Number(b.tahun_lulus));
+
     return {
-      total: total.count,
-      identified: identified.count,
-      verification: verification.count,
-      notFound: notFound.count,
-      untracked: untracked.count,
+      total: total || 0,
+      identified: identified || 0,
+      verification: verification || 0,
+      notFound: notFound || 0,
+      untracked: untracked || 0,
       byKategori,
-      byProdi,
-      byYear
+      byProdi: byProdiRaw,
+      byYear: byYearRaw
     };
   }
-  
-  // Get alumni count (simple helper)
+
   static async getAlumniCount() {
-    const result = await db.getAsync('SELECT COUNT(*) as count FROM alumni');
-    return result.count;
+    const { count } = await supabase.from('alumni').select('*', { count: 'exact', head: true });
+    return count || 0;
   }
 }
 

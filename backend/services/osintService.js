@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const db = require('../database/db');
+const supabase = require('../config/supabaseClient');
 const { scrapeDuckDuckGo } = require('./duckduckgoScraper');
 
 /**
@@ -235,8 +235,8 @@ function generateGoogleSearchLinks(nama, prodi) {
  * Probes multiple platforms + generates search links.
  */
 async function searchAlumni(alumniId) {
-    const alumni = await db.getAsync('SELECT * FROM alumni WHERE id = ?', [alumniId]);
-    if (!alumni) throw new Error('Alumni not found');
+    const { data: alumni, error } = await supabase.from('alumni').select('*').eq('id', alumniId).single();
+    if (error || !alumni) throw new Error('Alumni not found');
 
     const usernames = generateUsernames(alumni.nama);
     const results = [];
@@ -256,19 +256,16 @@ async function searchAlumni(alumniId) {
 
                 // If found via http_check, save it
                 if (checkResult.status === 'found') {
-                    await db.runAsync(
-                        `INSERT OR REPLACE INTO alumni_social_media (alumni_id, platform, username, profile_url, verified, last_checked)
-                         VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
-                        [alumniId, platformDef.name, username, checkResult.url]
+                    await supabase.from('alumni_social_media').upsert(
+                        { alumni_id: alumniId, platform: platformDef.name, username, profile_url: checkResult.url, verified: true, last_checked: new Date().toISOString() },
+                        { onConflict: 'alumni_id,platform' }
                     );
 
-                    // Also add to tracking history
-                    await db.runAsync(
-                        'INSERT INTO tracking_history (alumni_id, source, link, confidence) VALUES (?, ?, ?, ?)',
-                        [alumniId, `OSINT - ${platformDef.name}`, checkResult.url, 0.6]
+                    await supabase.from('tracking_history').insert(
+                        { alumni_id: alumniId, source: `OSINT - ${platformDef.name}`, link: checkResult.url, confidence: 0.6 }
                     );
 
-                    break; // Found on this platform, move to next
+                    break;
                 }
             } catch (err) {
                 // Silently continue on individual check errors
@@ -299,10 +296,7 @@ async function searchAlumni(alumniId) {
     const googleSearchLinks = generateGoogleSearchLinks(alumni.nama, alumni.prodi);
 
     // Update alumni last_checked
-    await db.runAsync(
-        'UPDATE alumni SET last_checked = CURRENT_TIMESTAMP WHERE id = ?',
-        [alumniId]
-    );
+    await supabase.from('alumni').update({ last_checked: new Date().toISOString() }).eq('id', alumniId);
 
     // Calculate simple confidence from how many platforms were found
     const foundCount = Object.values(platformChecks).filter(
@@ -318,19 +312,11 @@ async function searchAlumni(alumniId) {
     if (deepData.emails.length > 0 || deepData.phones.length > 0) {
         const email = deepData.emails[0] || null;
         const phone = deepData.phones[0] || null;
-        const existingContact = await db.getAsync('SELECT id FROM alumni_contact WHERE alumni_id = ?', [alumniId]);
-        if (existingContact) {
-            await db.runAsync(
-                `UPDATE alumni_contact SET email = COALESCE(email, ?), phone = COALESCE(phone, ?) WHERE id = ?`,
-                [email, phone, existingContact.id]
-            );
-        } else {
-            await db.runAsync(
-                'INSERT INTO alumni_contact (alumni_id, email, phone) VALUES (?, ?, ?)',
-                [alumniId, email, phone]
-            );
-        }
-        confidence = Math.min(confidence + 0.2, 1.0); // bump confidence if contact found
+        await supabase.from('alumni_contact').upsert(
+            { alumni_id: alumniId, email, phone },
+            { onConflict: 'alumni_id' }
+        );
+        confidence = Math.min(confidence + 0.2, 1.0);
     }
 
     // Save career
@@ -339,19 +325,11 @@ async function searchAlumni(alumniId) {
         const position = deepData.career.position || null;
         const address = deepData.career.company_address || null;
         const cSocial = deepData.career.company_social_media || null;
-        const existingCareer = await db.getAsync('SELECT id FROM alumni_career WHERE alumni_id = ? AND is_current = 1', [alumniId]);
-        if (existingCareer) {
-            await db.runAsync(
-                `UPDATE alumni_career SET company_name = COALESCE(company_name, ?), position = COALESCE(position, ?), company_address = COALESCE(company_address, ?), company_social_media = COALESCE(company_social_media, ?) WHERE id = ?`,
-                [company, position, address, cSocial, existingCareer.id]
-            );
-        } else {
-            await db.runAsync(
-                'INSERT INTO alumni_career (alumni_id, company_name, position, company_address, company_social_media) VALUES (?, ?, ?, ?, ?)',
-                [alumniId, company, position, address, cSocial]
-            );
-        }
-        confidence = Math.min(confidence + 0.5, 1.0); // huge bump if career is found
+        await supabase.from('alumni_career').upsert(
+            { alumni_id: alumniId, company_name: company, position, company_address: address, company_social_media: cSocial, is_current: true },
+            { onConflict: 'alumni_id,is_current' }
+        );
+        confidence = Math.min(confidence + 0.5, 1.0);
     }
     
     // Extract specific social links from the scraper snippets
@@ -363,17 +341,13 @@ async function searchAlumni(alumniId) {
         else if (r.url && r.url.includes('tiktok.com/')) platformName = 'TikTok';
 
         if (platformName) {
-            await db.runAsync(
-                 `INSERT OR REPLACE INTO alumni_social_media (alumni_id, platform, username, profile_url, verified, last_checked)
-                  VALUES (?, ?, ?, ?, 1, CURRENT_TIMESTAMP)`,
-                 [alumniId, platformName, 'extracted_from_search', r.url]
+            await supabase.from('alumni_social_media').upsert(
+                { alumni_id: alumniId, platform: platformName, username: 'extracted_from_search', profile_url: r.url, verified: true, last_checked: new Date().toISOString() },
+                { onConflict: 'alumni_id,platform' }
             );
             const pKey = platformName.toLowerCase();
             if (!platformChecks[pKey]) {
-                platformChecks[pKey] = {
-                    platform: platformName,
-                    results: []
-                };
+                platformChecks[pKey] = { platform: platformName, results: [] };
             }
             platformChecks[pKey].bestResult = { status: 'found', url: r.url };
             platformChecks[pKey].results.unshift({ status: 'found', url: r.url });
@@ -389,10 +363,11 @@ async function searchAlumni(alumniId) {
     if (confidence > 0.6) status = 'Teridentifikasi';
     else if (confidence >= 0.2) status = 'Perlu Verifikasi Manual';
 
-    await db.runAsync(
-        'UPDATE alumni SET confidence_score = ?, status = ?, kategori_pekerjaan = ? WHERE id = ?',
-        [confidence, status, kategoriToUpdate, alumniId]
-    );
+    await supabase.from('alumni').update({
+        confidence_score: confidence,
+        status,
+        kategori_pekerjaan: kategoriToUpdate
+    }).eq('id', alumniId);
 
     return {
         alumni,
