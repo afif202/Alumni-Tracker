@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Pelacakan Alumni</title>
-    <!-- Google Fonts: Inter & Outfit -->
+    <title>Dashboard — Alumni Tracker</title>
+    <meta name="description" content="Dashboard sistem pelacakan dan validasi alumni dengan integrasi OSINT.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js for Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -24,18 +22,22 @@
                 <div class="logo-icon-wrapper">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
-                <h2>AlumniTracker</h2>
+                <h2>Alumni<span>Tracker</span></h2>
             </div>
             <nav>
                 <ul>
-                    <li class="active"><a href="#"><i class="fa-solid fa-house"></i> <span>Dashboard</span></a></li>
-                    <li><a href="#"><i class="fa-solid fa-users"></i> <span>Alumni</span></a></li>
-                    <li><a href="#"><i class="fa-solid fa-chart-pie"></i> <span>Analytics</span></a></li>
-                    <li><a href="#"><i class="fa-solid fa-gear"></i> <span>Settings</span></a></li>
+                    <li class="active" data-view="dashboardView"><a href="#"><i class="fa-solid fa-house"></i> <span>Dashboard</span></a></li>
+                    <li data-view="alumniView"><a href="#"><i class="fa-solid fa-users"></i> <span>Alumni</span></a></li>
+                   
+                    <li data-view="osintView"><a href="#"><i class="fa-solid fa-satellite-dish"></i> <span>OSINT Search</span></a></li>
+                    <li data-view="analyticsView"><a href="#"><i class="fa-solid fa-chart-pie"></i> <span>Analytics</span></a></li>
                 </ul>
             </nav>
             <div class="sidebar-footer">
-                <p>&copy; 2026 SysAlumni</p>
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fa-solid fa-right-from-bracket"></i> <span>Logout</span>
+                </button>
+                <p>&copy; 2026 AlumniTracker</p>
             </div>
         </aside>
 
@@ -47,88 +49,79 @@
                     </button>
                     <div class="search-bar">
                         <i class="fa-solid fa-search"></i>
-                        <input type="text" placeholder="Search alumni...">
+                        <input type="text" id="globalSearch" placeholder="Search alumni...">
                     </div>
                 </div>
                 <div class="user-profile">
                     <div class="notifications">
                         <i class="fa-regular fa-bell"></i>
-                        <span class="badge">3</span>
+                        <span class="badge" id="notifBadge">0</span>
                     </div>
-                    <img src="https://ui-avatars.com/api/?name=Admin+User&background=6366f1&color=fff&bold=true" alt="Admin Info">
+                    <div class="user-info">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff&bold=true" alt="Admin">
+                        <span id="userDisplayName">Admin</span>
+                    </div>
                 </div>
             </header>
 
+            <!-- ═══════════════ DASHBOARD VIEW ═══════════════ -->
             <div id="dashboardView" class="scrollable-content view-section active-view">
                 <div class="content-header">
                     <div class="header-text">
-                        <h1>Daftar Alumni</h1>
+                        <h1>Dashboard</h1>
                         <p>Kelola dan lacak data alumni secara otomatis di berbagai platform publik.</p>
                     </div>
-                    <div style="display: flex; gap: 12px;">
-                        <button id="addAlumniBtn" class="btn-primary" style="background: white; color: var(--text-main); border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
-                            <div class="btn-content">
-                                <i class="fa-solid fa-plus"></i> 
-                                <span>Tambah Alumni</span>
-                            </div>
+                    <div class="header-actions">
+                        <button id="addAlumniBtn" class="btn-secondary">
+                            <div class="btn-content"><i class="fa-solid fa-plus"></i> <span>Tambah Alumni</span></div>
                         </button>
                         <button id="runTrackingBtn" class="btn-primary" title="Tracking akan memperbarui status alumni secara otomatis">
-                            <div class="btn-content">
-                                <i class="fa-solid fa-rotate"></i> 
-                                <span>Run Tracking Job</span>
-                            </div>
+                            <div class="btn-content"><i class="fa-solid fa-rotate"></i> <span>Run Tracking</span></div>
                         </button>
                     </div>
                 </div>
 
                 <div class="stats-overview">
                     <div class="stat-card">
-                        <div class="stat-icon-wrapper primary-glow">
-                            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalAlumni">0</h3>
-                            <p>Total Alumni</p>
-                        </div>
+                        <div class="stat-icon-wrapper primary-glow"><div class="stat-icon"><i class="fa-solid fa-users"></i></div></div>
+                        <div class="stat-info"><h3 id="totalAlumni">0</h3><p>Total Alumni</p></div>
                     </div>
                     <div class="stat-card success-card">
-                        <div class="stat-icon-wrapper success-glow">
-                            <div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalIdentified">0</h3>
-                            <p>Teridentifikasi</p>
-                        </div>
+                        <div class="stat-icon-wrapper success-glow"><div class="stat-icon"><i class="fa-solid fa-check-circle"></i></div></div>
+                        <div class="stat-info"><h3 id="totalIdentified">0</h3><p>Teridentifikasi</p></div>
                     </div>
                     <div class="stat-card warning-card">
-                        <div class="stat-icon-wrapper warning-glow">
-                            <div class="stat-icon"><i class="fa-solid fa-circle-exclamation"></i></div>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="totalVerification">0</h3>
-                            <p>Perlu Verifikasi</p>
-                        </div>
+                        <div class="stat-icon-wrapper warning-glow"><div class="stat-icon"><i class="fa-solid fa-circle-exclamation"></i></div></div>
+                        <div class="stat-info"><h3 id="totalVerification">0</h3><p>Perlu Verifikasi</p></div>
+                    </div>
+                    <div class="stat-card info-card">
+                        <div class="stat-icon-wrapper info-glow"><div class="stat-icon"><i class="fa-solid fa-briefcase"></i></div></div>
+                        <div class="stat-info"><h3 id="totalKategori">0</h3><p>Sudah Bekerja</p></div>
                     </div>
                 </div>
 
                 <div class="table-container">
                     <div class="table-header">
-                        <h2>Data Mahasiswa</h2>
+                        <h2>Data Alumni</h2>
                         <div class="table-actions">
-                            <div class="search-bar" style="width: 250px; background: white; border: 1px solid var(--border);">
+                            <div class="search-bar compact">
                                 <i class="fa-solid fa-search"></i>
                                 <input type="text" id="tableSearch" placeholder="Cari nama alumni...">
                             </div>
-                            <div class="filter-dropdown" style="position: relative;">
-                                <select id="statusFilter" style="appearance: none; background: white; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 36px 8px 16px; border-radius: 8px; font-weight: 500; font-size: 0.875rem; cursor: pointer; outline: none;">
-                                    <option value="all">Semua Status</option>
-                                    <option value="Teridentifikasi">Teridentifikasi</option>
-                                    <option value="Perlu Verifikasi Manual">Perlu Verifikasi Manual</option>
-                                    <option value="Belum Ditemukan">Belum Ditemukan</option>
-                                    <option value="Belum Dilacak">Belum Dilacak</option>
-                                </select>
-                                <i class="fa-solid fa-filter" style="position: absolute; right: 12px; top: 10px; color: var(--text-muted); pointer-events: none; font-size: 0.8rem;"></i>
-                            </div>
+                            <select id="statusFilter" class="filter-select">
+                                <option value="all">Semua Status</option>
+                                <option value="Teridentifikasi">Teridentifikasi</option>
+                                <option value="Perlu Verifikasi Manual">Perlu Verifikasi</option>
+                                <option value="Belum Ditemukan">Belum Ditemukan</option>
+                                <option value="Belum Dilacak">Belum Dilacak</option>
+                            </select>
+                            <select id="kategoriFilter" class="filter-select">
+                                <option value="all">Semua Kategori</option>
+                                <option value="PNS">PNS</option>
+                                <option value="Swasta">Swasta</option>
+                                <option value="Wirausaha">Wirausaha</option>
+                                <option value="Belum Diketahui">Belum Diketahui</option>
+                            </select>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -141,98 +134,239 @@
                                 <tr>
                                     <th>Info Alumni</th>
                                     <th>Program Studi</th>
-                                    <th>Status Kelengkapan</th>
-                                    <th>Confidence Score</th>
-                                    <th>Pembaruan Terakhir</th>
+                                    <th>Kategori</th>
+                                    <th>Status</th>
+                                    <th>Confidence</th>
+                                    <th>Terakhir Diperbarui</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="alumniTableBody">
-                                <!-- Data populated via JS -->
-                            </tbody>
+                            <tbody id="alumniTableBody"></tbody>
                         </table>
+                    </div>
+                    <div class="pagination-container" id="paginationContainer" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-top: 1px solid var(--border-light);">
+                        <span class="pagination-info" id="paginationInfo" style="font-size: 0.85rem; color: var(--text-muted);">Menampilkan 0 alumni</span>
+                        <div class="pagination-controls" style="display: flex; gap: 8px; align-items: center;">
+                            <button id="prevPageBtn" class="btn-secondary" style="padding: 6px 12px;" disabled><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                            <span id="currentPageDisplay" style="font-size: 0.85rem; font-weight: 600; margin: 0 8px;">Page 1</span>
+                            <button id="nextPageBtn" class="btn-secondary" style="padding: 6px 12px;" disabled>Next <i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Alumni View (Cards) -->
+            <!-- ═══════════════ ALUMNI CARDS VIEW ═══════════════ -->
             <div id="alumniView" class="scrollable-content view-section">
                 <div class="content-header">
                     <div class="header-text">
                         <h1>Profil Alumni Valid</h1>
-                        <p>Jaringan alumni yang telah teridentifikasi dan tervalidasi oleh sistem intelijen kami.</p>
+                        <p>Jaringan alumni yang telah teridentifikasi dan tervalidasi oleh sistem.</p>
                     </div>
                 </div>
-                <div class="alumni-grid" id="alumniCardContainer">
-                    <!-- Cards will be populated via JS -->
+                <div class="alumni-grid" id="alumniCardContainer"></div>
+            </div>
+
+ <!-- Note: Import via POST /api/alumni endpoint. Use curl or Postman.
+
+            <!-- ═══════════════ OSINT SEARCH VIEW ═══════════════ -->
+            <div id="osintView" class="scrollable-content view-section">
+                <div class="content-header">
+                    <div class="header-text">
+                        <h1><i class="fa-solid fa-satellite-dish" style="color:#a855f7;margin-right:12px;"></i>OSINT Intelligence Search</h1>
+                        <p>Pencarian jejak digital alumni di berbagai platform sosial media menggunakan metode Sherlock-style scanning.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button id="batchOsintBtn" class="btn-primary">
+                            <div class="btn-content"><i class="fa-solid fa-radar"></i> <span>Batch Scan (Auto)</span></div>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="osint-section">
+                    <!-- Search Individual -->
+                    <div class="osint-search-box">
+                        <h3><i class="fa-solid fa-user-secret"></i> Cari Alumni Individu</h3>
+                        <div class="osint-search-form" style="position:relative;">
+                            <input type="text" id="osintAlumniInput" class="filter-input" style="flex:1; padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);" placeholder="Ketik nama mahasiswa atau NIM..." autocomplete="off">
+                            <input type="hidden" id="osintAlumniSelectedId">
+                            <div id="osintAutocompleteList" class="autocomplete-list"></div>
+                            
+                            <button id="osintSearchBtn" class="btn-primary">
+                                <div class="btn-content"><i class="fa-solid fa-search"></i> <span>Scan OSINT</span></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scanning Progress -->
+                    <div id="osintProgress" class="osint-progress" style="display:none;">
+                        <div class="scan-header">
+                            <div class="scan-anim">
+                                <div class="scan-ring"></div>
+                                <i class="fa-solid fa-satellite-dish"></i>
+                            </div>
+                            <div>
+                                <h3 id="scanTitle">Scanning...</h3>
+                                <p id="scanSubtitle">Memeriksa jejak digital di berbagai platform</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OSINT Results -->
+                    <div id="osintResults" class="osint-results" style="display:none;">
+                        <div class="osint-results-header">
+                            <h3><i class="fa-solid fa-list-check"></i> Hasil OSINT Scan</h3>
+                            <div class="osint-summary" id="osintSummary"></div>
+                        </div>
+
+                        <!-- Platform Results Grid -->
+                        <div class="platform-grid" id="platformGrid"></div>
+
+                        <!-- Google Search Links -->
+                        <div class="google-links-section">
+                            <h4><i class="fa-brands fa-google"></i> Google Dork Search Links</h4>
+                            <div class="google-links-grid" id="googleLinksGrid"></div>
+                        </div>
+                    </div>
+
+                    <!-- Batch Results -->
+                    <div id="batchResults" class="batch-results" style="display:none;">
+                        <h3><i class="fa-solid fa-list-check"></i> Batch Scan Results</h3>
+                        <div id="batchResultsContent"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Analytics View -->
+            <!-- ═══════════════ ANALYTICS VIEW ═══════════════ -->
             <div id="analyticsView" class="scrollable-content view-section">
                 <div class="content-header">
                     <div class="header-text">
-                        <h1>Analitik Demografi</h1>
-                        <p>Visualisasi data keseluruhan status pelacakan dan program studi alumni.</p>
+                        <h1>Analitik & Demografi</h1>
+                        <p>Visualisasi data keseluruhan status pelacakan dan demografi alumni.</p>
                     </div>
                 </div>
-                <div class="analytics-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; padding: 0 32px 32px;">
-                    <div class="chart-card" style="background: var(--bg-card); padding: 24px; border-radius: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border);">
-                        <h3 style="margin-bottom: 16px; font-size: 1.25rem; font-weight: 600; text-align: center;">Status Pelacakan Alumni</h3>
-                        <div style="position: relative; height: 300px; width: 100%;">
-                            <canvas id="statusChart"></canvas>
-                        </div>
+                <div class="analytics-grid">
+                    <div class="chart-card">
+                        <h3>Status Pelacakan Alumni</h3>
+                        <div class="chart-wrapper"><canvas id="statusChart"></canvas></div>
                     </div>
-                    <div class="chart-card" style="background: var(--bg-card); padding: 24px; border-radius: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border);">
-                        <h3 style="margin-bottom: 16px; font-size: 1.25rem; font-weight: 600; text-align: center;">Distribusi Program Studi</h3>
-                        <div style="position: relative; height: 300px; width: 100%;">
-                            <canvas id="prodiChart"></canvas>
-                        </div>
+                    <div class="chart-card">
+                        <h3>Kategori Pekerjaan</h3>
+                        <div class="chart-wrapper"><canvas id="kategoriChart"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>Distribusi Program Studi</h3>
+                        <div class="chart-wrapper"><canvas id="prodiChart"></canvas></div>
+                    </div>
+                    <div class="chart-card wide">
+                        <h3>Distribusi Tahun Lulus</h3>
+                        <div class="chart-wrapper"><canvas id="yearChart"></canvas></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Modal for Add Alumni -->
+            <!-- ═══════════ MODAL: Add/Edit Alumni ═══════════ -->
             <div id="addAlumniModal" class="modal">
-                <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-content" style="max-width:600px;">
                     <div class="modal-header">
-                        <h2>Tambah Alumni Baru</h2>
+                        <h2 id="modalTitle">Tambah Alumni Baru</h2>
                         <button class="close-btn" id="closeAddModalBtn"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <div style="padding: 32px;">
+                    <div class="modal-body">
                         <form id="addAlumniForm">
-                            <div class="form-group" style="margin-bottom: 20px;">
-                                <label for="inputNama" style="display:block; margin-bottom:8px; font-weight:500;">Nama Lengkap</label>
-                                <input type="text" id="inputNama" required style="width:100%; padding:12px; border:1px solid var(--border); border-radius:8px; outline:none;" placeholder="Masukkan nama alumni">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 20px;">
-                                <label for="inputProdi" style="display:block; margin-bottom:8px; font-weight:500;">Program Studi</label>
-                                <input type="text" id="inputProdi" required style="width:100%; padding:12px; border:1px solid var(--border); border-radius:8px; outline:none;" placeholder="Contoh: Teknik Informatika">
-                            </div>
-                            <div class="form-group" style="margin-bottom: 28px;">
-                                <label for="inputTahun" style="display:block; margin-bottom:8px; font-weight:500;">Tahun Lulus</label>
-                                <input type="number" id="inputTahun" required min="1990" max="2026" style="width:100%; padding:12px; border:1px solid var(--border); border-radius:8px; outline:none;" placeholder="Contoh: 2021">
-                            </div>
-                            <button type="submit" class="btn-primary" style="width: 100%;">
-                                <div class="btn-content" style="justify-content:center;">
-                                    <span>Simpan Data</span>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="inputNama">Nama Lengkap *</label>
+                                    <input type="text" id="inputNama" required placeholder="Nama alumni">
                                 </div>
+                                <div class="form-group">
+                                    <label for="inputNim">NIM</label>
+                                    <input type="text" id="inputNim" placeholder="Nomor Induk Mahasiswa">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputProdi">Program Studi</label>
+                                    <input type="text" id="inputProdi" placeholder="Contoh: Teknik Informatika">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputTahun">Tahun Lulus</label>
+                                    <input type="number" id="inputTahun" min="1990" max="2030" placeholder="2021">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputKategori">Kategori Pekerjaan</label>
+                                    <select id="inputKategori">
+                                        <option value="Belum Diketahui">Belum Diketahui</option>
+                                        <option value="PNS">PNS</option>
+                                        <option value="Swasta">Swasta</option>
+                                        <option value="Wirausaha">Wirausaha</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputEmail">Email</label>
+                                    <input type="email" id="inputEmail" placeholder="email@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputPhone">No. HP</label>
+                                    <input type="text" id="inputPhone" placeholder="08xxxxxxxxxx">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputCompany">Tempat Bekerja</label>
+                                    <input type="text" id="inputCompany" placeholder="Nama perusahaan/instansi">
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputPosition">Posisi/Jabatan</label>
+                                    <input type="text" id="inputPosition" placeholder="Posisi pekerjaan">
+                                </div>
+                                <div class="form-group full-width">
+                                    <label for="inputCompanyAddr">Alamat Kantor</label>
+                                    <input type="text" id="inputCompanyAddr" placeholder="Alamat kantor/instansi">
+                                </div>
+                            </div>
+                            <input type="hidden" id="editAlumniId" value="">
+                            <button type="submit" class="btn-primary" style="width:100%;margin-top:16px;">
+                                <div class="btn-content" style="justify-content:center;"><span id="formSubmitText">Simpan Data</span></div>
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <!-- Modal for History -->
+            <!-- ═══════════ MODAL: Alumni Detail ═══════════ -->
+            <div id="detailModal" class="modal">
+                <div class="modal-content" style="max-width:720px;">
+                    <div class="modal-header">
+                        <h2>Detail Alumni</h2>
+                        <button class="close-btn" id="closeDetailBtn"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="detail-tabs">
+                            <button class="tab-btn active" data-tab="tabInfo">Info</button>
+                            <button class="tab-btn" data-tab="tabSocial">Sosial Media</button>
+                            <button class="tab-btn" data-tab="tabCareer">Karir</button>
+                            <button class="tab-btn" data-tab="tabHistory">History</button>
+                        </div>
+                        <div class="tab-content active" id="tabInfo">
+                            <div id="detailInfoContent"></div>
+                        </div>
+                        <div class="tab-content" id="tabSocial">
+                            <div id="detailSocialContent"></div>
+                        </div>
+                        <div class="tab-content" id="tabCareer">
+                            <div id="detailCareerContent"></div>
+                        </div>
+                        <div class="tab-content" id="tabHistory">
+                            <div id="detailHistoryContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════ MODAL: History (legacy) ═══════════ -->
             <div id="historyModal" class="modal">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2>Tracking History <span id="modalAlumniName"></span></h2>
                         <button class="close-btn"><i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <div class="history-list" id="historyList">
-                        <!-- History data -->
-                    </div>
+                    <div class="history-list" id="historyList"></div>
                 </div>
             </div>
         </main>

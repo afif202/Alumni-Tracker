@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — Alumni Tracker</title>
+    <meta name="description" content="Login ke sistem pelacakan alumni untuk mengelola dan memvalidasi data alumni.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <!-- Animated background particles -->
+    <div class="bg-particles" id="particles"></div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Left branding panel -->
+            <div class="login-branding">
+                <div class="branding-content">
+                    <div class="brand-icon">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <h1>Alumni<span>Tracker</span></h1>
+                    <p>Sistem Pelacakan & Validasi Data Alumni berbasis OSINT Intelligence</p>
+                    <div class="features-list">
+                        <div class="feature-item">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span>Secured Data Access</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-magnifying-glass-chart"></i>
+                            <span>Multi-Platform OSINT</span>
+                        </div>
+                        <div class="feature-item">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span>Excel Data Import</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="branding-footer">
+                    <p>&copy; 2026 AlumniTracker — Private & Confidential</p>
+                </div>
+            </div>
+
+            <!-- Right login form panel -->
+            <div class="login-form-panel">
+                <div class="form-wrapper">
+                    <div class="form-header">
+                        <h2>Selamat Datang</h2>
+                        <p>Masuk ke dashboard untuk mengelola data alumni</p>
+                    </div>
+
+                    <form id="loginForm" autocomplete="off">
+                        <div class="input-group">
+                            <label for="username">Username</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-user"></i>
+                                <input type="text" id="username" name="username" placeholder="Masukkan username" required autofocus>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="password">Password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" id="password" name="password" placeholder="Masukkan password" required>
+                                <button type="button" class="toggle-password" id="togglePassword">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="error-message" id="errorMessage">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                            <span id="errorText"></span>
+                        </div>
+
+                        <button type="submit" class="login-btn" id="loginBtn">
+                            <span class="btn-text">Masuk ke Dashboard</span>
+                            <span class="btn-loader"><i class="fa-solid fa-spinner fa-spin"></i></span>
+                            <i class="fa-solid fa-arrow-right btn-arrow"></i>
+                        </button>
+                    </form>
+
+                    <div class="form-footer">
+                        <p><i class="fa-solid fa-lock"></i> Semua data dijamin keamanannya</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>
